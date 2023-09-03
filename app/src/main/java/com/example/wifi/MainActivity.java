@@ -5,6 +5,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -13,25 +14,28 @@ import android.content.pm.PackageManager;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.os.Environment;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String LOG_TAG = "AndroidWifi";
-
     private static final int MY_REQUEST_CODE = 123;
-
     private WifiManager wifiManager;
-
     private TextView textViewScanResults;
-
     private WifiBroadcastReceiver wifiReceiver;
+    private String results;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,9 +52,11 @@ public class MainActivity extends AppCompatActivity {
 
         //
         Button buttonScan = this.findViewById(R.id.button_scan);
+        Button buttonSave = this.findViewById(R.id.saveBtn);
         this.textViewScanResults = this.findViewById(R.id.textView_scanResults);
 
         buttonScan.setOnClickListener(v -> askAndStartScanWifi());
+        buttonSave.setOnClickListener(v -> saveData());
     }
 
     private void askAndStartScanWifi() {
@@ -126,6 +132,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @SuppressLint("SimpleDateFormat")
     private void showNetworksDetails(List<ScanResult> results) {
 
         this.textViewScanResults.setText("");
@@ -138,12 +145,40 @@ public class MainActivity extends AppCompatActivity {
             if (result.SSID.equals("MERCUSYS_531C") ||
                     result.SSID.equals("MERCUSYS_DF54") ||
                     result.SSID.equals("MERCUSYS_DFC4") ||
-                    result.SSID.equals("MERCUSYS_DF48")) {
+                    result.SSID.equals("MERCUSYS_DF48") ||
+                    result.SSID.equals("MERCUSYS_DF9E") ||
+                    result.SSID.equals("MERCUSYS_DF00") ||
+                    result.SSID.equals("MERCUSYS_03A0") ||
+                    result.SSID.equals("MERCUSYS_DF52")) {
                 sb.append("\n SSID: ").append(result.SSID); // Network Name.
                 sb.append("\n BSSID: ").append(result.BSSID); // Basic Service Set Identifier
                 sb.append("\n level (RSSI): ").append(result.level).append(" dBm\n");
             }
         }
+
+        String timeStamp;
+        timeStamp = new SimpleDateFormat("yy.MM.dd HH:mm:ss").format(Calendar.getInstance().getTime());
+        sb.append("\nTIME: ").append(timeStamp).append("\n\n");
+
         this.textViewScanResults.setText(sb.toString());
+        this.results = sb.toString();
+    }
+
+    private void saveData() {
+        try {
+            File file = new File(Environment.getExternalStorageDirectory(), "Documents");
+            if (!file.exists()) {
+                file.mkdirs();
+            }
+            File gpxfile = new File(file, "resultsWifi.txt");
+            FileWriter writer = new FileWriter(gpxfile, true);
+            writer.append(this.results);
+            writer.flush();
+            writer.close();
+            Toast.makeText(getBaseContext(), "File saved successfully!",
+                    Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

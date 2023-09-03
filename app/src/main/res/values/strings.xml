@@ -2,4 +2,5 @@
     <string name="app_name">InDoorWiFi</string>
     <string name="button_scan">Scan Wifi</string>
     <string name="results_view">Results</string>
+    <string name="save">Save</string>
 </resources>
